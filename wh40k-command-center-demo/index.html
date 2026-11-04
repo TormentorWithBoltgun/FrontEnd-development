@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="Imperial Command Center">
+    <meta name="author" content="Keni Suomalainen">
+
+    <title>Imperial Command Center</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3.5.43/dist/vue.global.js"></script>
+
+    <!-- Anime 4.0.2-->
+    <script src="https://cdn.jsdelivr.net/npm/animejs@4.0.2/lib/anime.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div id="app">
+
+        <!-- Top-Block -->
+        <header class="topbar">
+
+            <div class="logo">
+                IMPERIAL COMMAND
+            </div>
+
+            <div class="system-status">
+                SYSTEM STATUS:
+                <span class="online">ONLINE</span>
+            </div>
+
+            <div class="clock" id="kello">
+                00:00:00
+            </div>
+
+        </header>
+
+
+        <div class="layout">
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+
+                <h2>COMMAND</h2>
+
+                <button
+                    :class="{ active: aktiivinenNakyma === 'dashboard' }"
+                    @click="vaihdaNakyma('dashboard')">
+                    DASHBOARD
+                </button>
+
+                <button
+                    :class="{ active: aktiivinenNakyma === 'planets' }"
+                    @click="vaihdaNakyma('planets')">
+                    PLANETS
+                </button>
+
+                <button 
+                    :class="{ active: aktiivinenNakyma === 'map' }" 
+                    @click="vaihdaNakyma('map')">
+                STAR MAP
+                </button>
+
+                <button
+                    :class="{ active: aktiivinenNakyma === 'lofi' }"
+                    @click="vaihdaNakyma('lofi')">
+                    BREAK
+                </button>
+
+                <button
+                    :class="{ active: aktiivinenNakyma === 'units' }"
+                    @click="vaihdaNakyma('units')">
+                    UNITS
+                </button>
+
+                <button
+                    :class="{ active: aktiivinenNakyma === 'logs' }"
+                    @click="vaihdaNakyma('logs')">
+                    COMMAND LOG
+                </button>
+
+            </aside>
+
+
+            <!-- Main Content -->
+            <main class="main-content">
+
+
+                <!-- DASHBOARD -->
+
+                <section v-if="aktiivinenNakyma === 'dashboard'">
+
+                    <h1>IMPERIAL COMMAND CENTER</h1>
+
+                    <p class="subtitle">
+                        ADEPTUS TERRA // STRATEGIC COMMAND NETWORK
+                    </p>
+
+
+                    <!-- Planet -->
+                    <div class="panel">
+
+                        <h2>PLANETARY STATUS</h2>
+
+                        <div class="planet-info">
+
+                            <div>
+                                <span class="label">PLANET</span>
+
+                                <select v-model="valittuPlaneetta">
+                                    <option
+                                        v-for="planeetta in planeetat"
+                                        :value="planeetta.nimi"
+                                    >
+                                        {{ planeetta.nimi }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <span class="label">SECTOR</span>
+                                <strong>{{ nykyinenPlaneetta.sektori }}</strong>
+                            </div>
+
+                            <div>
+                                <span class="label">STATUS</span>
+
+                                <strong
+                                    :class="nykyinenPlaneetta.status.toLowerCase()"
+                                >
+                                    {{ nykyinenPlaneetta.status }}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Dashboard -->
+
+                    <div class="stats">
+
+                        <div class="stat-box">
+
+                            <span class="label">
+                                THREAT LEVEL
+                            </span>
+
+                            <strong>
+                                {{ nykyinenPlaneetta.uhka }}%
+                            </strong>
+
+                            <div class="progress">
+                                <div
+                                    class="progress-bar danger"
+                                    :style="{ width: nykyinenPlaneetta.uhka + '%' }"
+                                ></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="stat-box">
+
+                            <span class="label">
+                                IMPERIAL FORCES
+                            </span>
+
+                            <strong>
+                                {{ nykyinenPlaneetta.joukot }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-box">
+
+                            <span class="label">
+                                ENEMY FORCES
+                            </span>
+
+                            <strong>
+                                {{ nykyinenPlaneetta.viholliset }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Command Actions -->
+
+                    <div class="panel">
+
+                        <h2>COMMAND ACTIONS</h2>
+
+                        <div class="actions">
+
+                            <button @click="lahetaJoukot">
+                                DEPLOY FORCES
+                            </button>
+
+                            <button @click="orbitalStrike">
+                                ORBITAL STRIKE
+                            </button>
+
+                            <button @click="scanSector">
+                                SCAN SECTOR
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Command Log -->
+
+                    <div class="panel">
+
+                        <h2>RECENT COMMAND LOG</h2>
+
+                        <ul class="log">
+
+                            <li
+                                v-for="tapahtuma in tapahtumat"
+                                :key="tapahtuma.id"
+                            >
+                                <span>
+                                    {{ tapahtuma.aika }}
+                                </span>
+
+                                {{ tapahtuma.viesti }}
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </section>
+
+
+                <!-- Planets -->
+
+                <section v-if="aktiivinenNakyma === 'planets'">
+
+                    <h1>PLANETARY DATABASE</h1>
+
+                    <div class="planet-grid">
+
+                        <div
+                            class="planet-card"
+                            v-for="planeetta in planeetat"
+                            :key="planeetta.nimi"
+                            @click="valitsePlaneetta(planeetta.nimi)"
+                        >
+
+                            <h2>
+                                {{ planeetta.nimi }}
+                            </h2>
+
+                            <p>
+                                Sector {{ planeetta.sektori }}
+                            </p>
+
+                            <p>
+                                Threat:
+                                {{ planeetta.uhka }}%
+                            </p>
+
+                            <strong>
+                                {{ planeetta.status }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- UNITS -->
+
+                <section v-if="aktiivinenNakyma === 'units'">
+
+                    <h1>IMPERIAL FORCES</h1>
+
+                    <div class="unit-grid">
+
+                        <div
+                            class="unit-card"
+                            v-for="yksikko in yksikot"
+                            :key="yksikko.nimi"
+                        >
+
+                            <h2>
+                                {{ yksikko.nimi }}
+                            </h2>
+
+                            <p>
+                                TYPE:
+                                {{ yksikko.tyyppi }}
+                            </p>
+
+                            <strong>
+                                STRENGTH:
+                                {{ yksikko.maara }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <section v-if="aktiivinenNakyma === 'map'">
+    
+                    <h1>GALACTIC COGITATOR</h1>
+    
+                    <p class="subtitle">SEGMENTUM SOLAR // TACTICAL AUSPEX</p>
+
+    
+                    <div class="cogitator">
+        
+                        <div class="star-map-wrap">
+            
+                            <div class="map-controls">
+                
+                                <button data-map="scan">SCAN</button>
+                
+                                <button data-map="in">+</button>
+                
+                                <button data-map="out">−</button>
+                
+                                <button data-map="reset">RESET</button>
+            
+                            </div>
+            
+                            <div id="star-map" class="star-map"></div>
+            
+                            <div class="map-hint">DRAG TO PAN // WHEEL TO ZOOM // CLICK A WORLD</div>
+        
+                        </div>
+
+        
+                        <aside class="panel tactical">
+
+                            <transition name="tac" mode="out-in">
+
+                                <div v-if="taktinen" :key="taktinen.nimi">
+
+                                    <button class="tactical-close" @click="suljeTaktinen">✕</button>
+
+                                    <h2>{{ taktinen.nimi.toUpperCase() }}</h2>
+
+                                    <div class="planet-art" v-planet-art="taktinen.nimi"></div>
+
+                                    <span class="label">CLASS // SECTOR</span>
+                                    <strong>{{ taktinen.tyyppi }} // {{ taktinen.sektori }}</strong>
+
+                                    <span class="label">PLANET STATUS</span>
+                                    <strong :class="taktinen.status.toLowerCase()">{{ taktinen.status }}</strong>
+
+                                    <span class="label">THREAT LEVEL {{ taktinen.uhka }}%</span>
+                                    <div class="progress">
+                                        <div class="progress-bar danger" :style="{ width: taktinen.uhka + '%' }"></div>
+                                    </div>
+
+                                    <div class="t-grid">
+                                        <div>
+                                            <span class="label">IMPERIAL FORCES</span>
+                                            <strong>{{ muotoile(taktinen.joukot) }}</strong>
+                                        </div>
+                                        <div>
+                                            <span class="label">ENEMY FORCES</span>
+                                            <strong>{{ muotoile(taktinen.viholliset) }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <span class="label">POPULATION</span>
+                                    <strong>{{ muotoile(taktinen.vaesto) }}</strong>
+
+                                    <span class="label">RESOURCES</span>
+                                    <div class="tags">
+                                        <span class="tag" v-for="r in taktinen.resurssit" :key="r">{{ r }}</span>
+                                    </div>
+
+                                    <span class="label">LAST TRANSMISSION</span>
+                                    <div class="t-transmission">{{ taktinen.viimeinenViesti }}</div>
+
+                                    <div class="tactical-actions">
+                                        <button @click="deployForces(taktinen)">DEPLOY FORCES</button>
+                                        <button class="strike" @click="orbitalStrikeOn(taktinen)">ORBITAL STRIKE</button>
+                                        <button @click="raporttiAuki = true">OPEN PLANETARY REPORT</button>
+                                    </div>
+
+                                </div>
+
+                                <p v-else key="empty" class="tactical-empty">
+                                    // TACTICAL VIEW OFFLINE<br>
+                                    // SELECT A WORLD ON THE MAP
+                                </p>
+
+                            </transition>
+
+                        </aside>
+
+
+                        <!-- Planetary report -->
+                        <transition name="tac">
+
+                            <div class="modal-backdrop" v-if="raporttiAuki && taktinen" @click.self="raporttiAuki = false">
+
+                                <div class="panel modal">
+
+                                    <h2>PLANETARY REPORT // {{ taktinen.nimi.toUpperCase() }}</h2>
+
+                                    <div class="report-row"><span>CLASS</span><span>{{ taktinen.tyyppi }}</span></div>
+                                    <div class="report-row"><span>SECTOR</span><span>{{ taktinen.sektori }}</span></div>
+                                    <div class="report-row"><span>POPULATION</span><span>{{ muotoile(taktinen.vaesto) }}</span></div>
+                                    <div class="report-row"><span>IMPERIAL FORCES</span><span>{{ muotoile(taktinen.joukot) }}</span></div>
+                                    <div class="report-row"><span>ENEMY FORCES</span><span>{{ muotoile(taktinen.viholliset) }}</span></div>
+                                    <div class="report-row"><span>FORCE RATIO</span><span>{{ voimasuhde }}</span></div>
+                                    <div class="report-row"><span>THREAT LEVEL</span><span>{{ taktinen.uhka }}%</span></div>
+                                    <div class="report-row"><span>STATUS</span><span :class="taktinen.status.toLowerCase()">{{ taktinen.status }}</span></div>
+                                    <div class="report-row"><span>RESOURCES</span><span>{{ taktinen.resurssit.join(" / ") }}</span></div>
+                                    <div class="report-row"><span>LAST TRANSMISSION</span><span>{{ taktinen.viimeinenViesti }}</span></div>
+
+                                    <p class="report-assessment">
+                                        <span class="label">ASSESSMENT</span>
+                                        {{ arvio }}
+                                    </p>
+
+                                    <div class="actions">
+                                        <button @click="raporttiAuki = false">CLOSE REPORT</button>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </transition>
+    
+                    </div>
+
+                </section>
+
+
+                <!-- BREAK -->
+
+                <section v-if="aktiivinenNakyma === 'lofi'">
+
+                    <h1>VIGIL BREAK</h1>
+
+                    <p class="subtitle">LO-FI PLAINCHANT // BEATS TO PURGE HERESY TO</p>
+
+                    <div class="lofi-wrap">
+
+                        <div id="lofi-scene" class="lofi-scene"></div>
+
+                        <div class="lofi-bar">
+                            <span class="lofi-live"><i></i> LIVE // 24-7 // THE EMPEROR PROTECTS</span>
+                            <button @click="vaihdaAani">{{ aanetPaalla ? "SOUND: ON" : "SOUND: OFF" }}</button>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- LOG -->
+
+                <section v-if="aktiivinenNakyma === 'logs'">
+
+                    <h1>COMMAND LOG</h1>
+
+                    <div class="panel">
+
+                        <ul class="log">
+
+                            <li
+                                v-for="tapahtuma in tapahtumat"
+                                :key="tapahtuma.id"
+                            >
+
+                                <span>
+                                    {{ tapahtuma.aika }}
+                                </span>
+
+                                {{ tapahtuma.viesti }}
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+
+    <!-- Vanilla JavaScript -->
+    <script src="js/vanilla.js"></script>
+
+    <!-- Anime.js -->
+    <script src="js/anime.js"></script>
+
+    <!-- Vue -->
+    <script src="js/vue.js"></script>
+
+</body>
+
+</html>
